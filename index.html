@@ -35,7 +35,9 @@
 <button id="status">Status Notification</button>
 <button id="heartbeat">Heartbeat</button>
 
-<span>Id Tag (from RFID card)</span><input id="idTag" type="text" value="dummytag"/>
+<span>Authorization Enabled</span>
+<input type="checkbox" name="checkboxAuthEnabled" id="checkboxAuthEnabled" onchange="onAuthenabledChange();">
+<span>Id Tag (from RFID card)</span><input id="idTag" type="text" value=""/>
 <button id="send">Authorize</button>
 
 <span>meterStart (always in Wh)</span><input id="meterStart" type="text" value="0"/>
@@ -242,7 +244,6 @@
 
 <script>
 var tz;
-var idTag = $('#idTag').val();
 var connectorId = $('#connectorId').val();
 var meterStart = $('#meterStart').val();
 var reservationId = $('#reservationId').val();
@@ -252,7 +253,6 @@ var chargePointVendor = $('#chargePointVendor').val();
 var chargePointModel = $('#chargePointModel').val();
 var chargePointSerialNumber = $('#chargePointSerialNumber').val();
 var chargeBoxSerialNumber = $('#chargeBoxSerialNumber').val();
-var firmwareVersion = $('#firmwareVersion').val();
 var iccid = $('#iccid').val();
 var imsi = $('#imsi').val();
 var meterType = $('#meterType').val();
@@ -260,7 +260,6 @@ var meterSerialNumber = $('#meterSerialNumber').val();
 var datatrasfer = $('#datatrasfer').val();
 
 function onAction() {
-    idTag = $('#idTag').val();
     connectorId = $('#connectorId').val();
     meterStart = $('#meterStart').val();
     reservationId = $('#reservationId').val();
@@ -270,7 +269,6 @@ function onAction() {
     chargePointModel = $('#chargePointModel').val();
     chargePointSerialNumber = $('#chargePointSerialNumber').val();
     chargeBoxSerialNumber = $('#chargeBoxSerialNumber').val();
-    firmwareVersion = $('#firmwareVersion').val();
     iccid = $('#iccid').val();
     imsi = $('#imsi').val();
     meterType = $('#meterType').val();
@@ -551,8 +549,13 @@ function wsConnect() {
                         _websocket.send(CA);
                         break;
                     case "ChangeConfiguration":
+												var configKey = receivedMessagePayload.key;
+												var configValue = receivedMessagePayload.value;
+
+												var configurationStatus = changeConfiguration(receivedMessagePayload.key, receivedMessagePayload.value);
+
                         var CC = JSON.stringify([3, receivedMessageId, {
-                            "status": "Accepted"
+                            "status": configurationStatus
                         }]);
                         _websocket.send(CC);
                         break;
@@ -563,13 +566,13 @@ function wsConnect() {
                         _websocket.send(CCache);
                         break;
                     case "GetConfiguration":
-												var idTag = $('#idTag').val();
 										    var responsePayload = {};
-												switch (receivedMessagePayload.key) {
+												switch (receivedMessagePayload.key[0]) {
 													case "evb_AutoStart":
+															var autoStartIdTag = getAuthEnabled() ? "" : "dummytag";
 															responsePayload.configurationKey = [
 										           {
-										             "value": idTag,
+										             "value": autoStartIdTag,
 										             "readonly": false,
 										             "key": "evb_AutoStart"
 										           }
@@ -581,6 +584,10 @@ function wsConnect() {
                         _websocket.send(GC);
                         break;
                         //17
+										case "UpdateFirmware":
+                        var CCache = JSON.stringify([3, receivedMessageId, {}]);
+                        _websocket.send(CCache);
+                        break;
                     default:
                         var error = JSON.stringify([4, receivedMessageId]);
                         _websocket.send(error);
@@ -629,7 +636,7 @@ function Authorize() {
 
     sessionStorage.setItem('LastAction', "Authorize");
     var Auth = JSON.stringify([2, id, "Authorize", {
-        "idTag": idTag
+        "idTag": getIdTag()
     }]);
     _websocket.send(Auth);
 
@@ -645,7 +652,7 @@ function startTransaction() {
     logMsg("Connector status changed to: " + connector_locked);
     var strtT = JSON.stringify([2, id, "StartTransaction", {
         "connectorId": parseInt(connectorId),
-        "idTag": idTag,
+        "idTag": getIdTag(),
         "timestamp": formatDate(new Date()),
         "meterStart": Number.parseInt($('#meterStart').val()),
         "reservationId": 0
@@ -666,7 +673,7 @@ function stopTransaction(transaction_id = false) {
     }
     var stpT = JSON.stringify([2, id, "StopTransaction", {
         "transactionId": parseInt(ssid),
-        "idTag": idTag,
+        "idTag": getIdTag(),
         "timestamp": formatDate(new Date()),
         "meterStop": Number.parseInt($('#meterStop').val())
     }]);
@@ -855,6 +862,41 @@ $('#connect').on('change', function() {
 
     }
 });
+
+function getAuthEnabled() {
+	return $('#checkboxAuthEnabled').is(':checked');
+
+}
+
+function setAuthEnabled(enabled) {
+	logMsg("Changed AuthEnabled to: " + enabled);
+	$("#checkboxAuthEnabled").prop("checked", enabled);
+}
+
+function onAuthenabledChange() {
+	logMsg("Authorization Enabled changed to: " + getAuthEnabled());
+}
+
+function getIdTag() {
+		var idTag;
+
+		if (getAuthEnabled()) {
+				idTag = "dummytag";
+		} else {
+				idTag = $('#idTag').val();
+		}
+
+		return idTag;
+}
+
+function changeConfiguration(key, value) {
+	switch (key) {
+		case "evb_AutoStart":
+			setAuthEnabled(value == "");
+			break;
+		default:
+	}
+}
 
 
 </script>
