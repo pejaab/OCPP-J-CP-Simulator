@@ -440,7 +440,7 @@ function wsConnect() {
         $('#red').show();
         _websocket.close(3001);
     } else {
-        _websocket = new WebSocket(wsurl + "" + CP, ["ocpp1.6", "ocpp1.5"]);
+        _websocket = new WebSocket(wsurl + "" + CP, ["ocpp1.6"]);
         _websocket.onopen = function(authorizationData) {
             sessionStorage.setItem('connecting', null);
 
@@ -881,9 +881,9 @@ function getIdTag() {
 		var idTag;
 
 		if (getAuthEnabled()) {
-				idTag = "dummytag";
-		} else {
 				idTag = $('#idTag').val();
+		} else {
+				idTag = "dummytag";
 		}
 
 		return idTag;
