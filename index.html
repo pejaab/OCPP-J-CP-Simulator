@@ -429,7 +429,7 @@ function wsConnect() {
             var ddata = (JSON.parse(msg.data));
 
             if (c == 1) {
-                var hb_interval = handleData(ddata);
+                var hb_interval = Math.max(30,handleData(ddata));
                 sessionStorage.setItem("Configuration", hb_interval);
                 startHB(hb_interval * 1000);
             }
@@ -525,6 +525,7 @@ function wsConnect() {
 												var configValue = receivedMessagePayload.value;
 
 												var configurationStatus = changeConfiguration(receivedMessagePayload.key, receivedMessagePayload.value);
+												//var configurationStatus = "Rejected";
 
                         var CC = JSON.stringify([3, receivedMessageId, {
                             "status": configurationStatus
@@ -865,8 +866,10 @@ function changeConfiguration(key, value) {
 	switch (key) {
 		case "evb_AutoStart":
 			setAuthEnabled(value == "");
+			return "Accepted";
 			break;
 		default:
+		  return "Rejected";
 	}
 }
 
