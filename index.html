@@ -601,16 +601,18 @@
                   break;
                 case "RemoteStopTransaction":
                   //TransactionID
+                  var transactionIdRequestStop = receivedMessagePayload.transactionId;
+                  var responseStatus = transactionIdRequestStop == getTransactionId() ? "Accepted" : "Rejected";
                   var remStp = JSON.stringify([
                     3,
                     receivedMessageId,
                     {
-                      status: "Accepted",
-                    },
+                      status: responseStatus
+                    }
                   ]);
                   _websocket.send(remStp);
-                  var stop_id = JSON.parse(msg.data)[3].transactionId;
 									// disable, because it's not correct for all possible charging scenarios
+                  // var stop_id = JSON.parse(msg.data)[3].transactionId;
 									// stopTransaction(stop_id);
                   $(".indicator").hide();
                   $("#yellow").show();
