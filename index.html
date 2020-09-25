@@ -610,7 +610,8 @@
                   ]);
                   _websocket.send(remStp);
                   var stop_id = JSON.parse(msg.data)[3].transactionId;
-                  stopTransaction(stop_id);
+									// disable, because it's not correct for all possible charging scenarios
+									// stopTransaction(stop_id);
                   $(".indicator").hide();
                   $("#yellow").show();
                   break;
@@ -626,7 +627,8 @@
                   _websocket.send(remStrt);
                   $("#idTag").val(ddata[3].idTag);
                   idTag = $("#idTag").val().trim();
-                  Authorize();
+									// disable, because it's not correct for all possible charging scenarios
+									// Authorize();
                   break;
                 case "UnlockConnector":
                   var UC = JSON.stringify([
